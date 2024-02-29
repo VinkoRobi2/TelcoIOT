@@ -7,6 +7,7 @@ bot = telebot.TeleBot(Token)
 
 # Variable global para mantener el estado del bot
 bot_activado = True
+print('Bad Gyal')
 
 @bot.message_handler(commands=['help', 'start',])
 def enviarsms(message):
