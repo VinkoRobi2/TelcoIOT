@@ -5,9 +5,13 @@ import random
 Token = '7013989876:AAFm44mpmZLJNTh4mx_esxcBslTqZ97pjC8'
 bot = telebot.TeleBot(Token)
 
+# Variable global para mantener el estado del bot
+bot_activado = True
+
 @bot.message_handler(commands=['help', 'start'])
 def enviarsms(message):
-    markup = ReplyKeyboardMarkup(row_width=2)
+    global bot_activado
+    markup = ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)  # Modificación aquí
     item1 = KeyboardButton("Sí, deseo saber la temperatura")
     item2 = KeyboardButton("No, tal vez más tarde")
     markup.add(item1, item2)
@@ -18,16 +22,23 @@ def enviarsms(message):
     elif random_number == 2:
         bot.reply_to(message, '¡Hola! Soy TelcoIot, aquí estoy para mantenerte al día con la temperatura. Si alguna vez necesitas conocer la temperatura actual o previsiones para tu área, ¡no dudes en preguntar! Estoy aquí para ayudarte.', reply_markup=markup)
 
-
 @bot.message_handler(func=lambda message: message.text == 'No, tal vez más tarde')
 def detener_bot(message):
+    global bot_activado
     bot.send_message(message.chat.id, 'Entiendo. Si necesitas ayuda más tarde, ¡no dudes en contactarme nuevamente!')
-    bot.stop_polling()
+    bot_activado = False
 
+@bot.message_handler(func=lambda message: not bot_activado)
+def reactivar_bot(message):
+    global bot_activado
+    bot_activado = True
+    enviarsms(message)
 
 @bot.message_handler(func=lambda message: message.text == 'Sí, deseo saber la temperatura')
 def ubicacion_temperatura(message):
+    global bot_activado
     bot.send_message(message.chat.id, '¡Genial! ¿De qué ubicación deseas saber la temperatura?', reply_markup=generar_teclado_ubicaciones())
+    bot_activado = True
 
 def generar_teclado_ubicaciones():
     markup = ReplyKeyboardMarkup(row_width=2)
@@ -36,18 +47,19 @@ def generar_teclado_ubicaciones():
     markup.add(item1, item2)
     return markup
 
-@bot.message_handler(func=lambda message: message.text == "Kennedy")
-def QuedeseassaberK(message):
-    bot.send_message(message.chat.id, '!Bien, ¿Qué específicamente deseas saber de Kennedy?', reply_markup=Opcines() )
-
-
-@bot.message_handler(func=lambda message: message.text =='Campamento')
-def QuedeseassaberC(message):
-    bot.send_message(message.chat.id,'!Bien que deseas saber de Campamento', reply_markup=Opcines())
-
 def Opcines():
     markup = ReplyKeyboardMarkup(row_width=2)
     item1 = KeyboardButton('Temperatura')
     item2 = KeyboardButton('Ph del ambiente')
     markup.add(item1,item2)
-bot.polling()
+    return markup
+
+# Agrega aquí tus manejadores para las ubicaciones y otras funcionalidades...
+
+# Función para iniciar el bucle de polling continuo
+def iniciar_bot():
+    bot.polling(none_stop=True)
+
+# Iniciar el bot
+if __name__ == "__main__":
+    iniciar_bot()
