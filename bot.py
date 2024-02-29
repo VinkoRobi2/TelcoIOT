@@ -35,7 +35,24 @@ def get_temperatureCampamento(device_keyC, token):
     except requests.exceptions.RequestException as e:
         return f"Error al realizar la solicitud: {str(e)}"
 
+def PolucionCampamento(device_keyC,token):
+   url = f'https://industrial.api.ubidots.com/api/v2.0/devices/{device_keyC}/_/values/last'
+   headers = {'X-Auth-Token': token}
+   try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Lanzar una excepción para códigos de estado HTTP no exitosos
+        data = response.json()
+        print(data)
+        PolucionC = data.get('pm2.5')
+        if PolucionC:
+          Polucion_value = PolucionC.get('value')
+        if Polucion_value is not None:
+           rounded_temperature = round(Polucion_value)
+           return rounded_temperature
 
+   except requests.exceptions.RequestException as e:
+        return f"Error al realizar la solicitud: {str(e)}"
+ 
 
 def get_temperatureKennedy(device_keyK,token):
        url = f'https://industrial.api.ubidots.com/api/v2.0/devices/{device_keyK}/_/values/last'
@@ -189,11 +206,25 @@ def generar_teclado_ubicaciones():
 def QuedeseassaberK():
     markup = InlineKeyboardMarkup(row_width=1)
     item1 = InlineKeyboardButton('Temperatura', callback_data='temp_kennedy')
-    item2 = InlineKeyboardButton('Ph del ambiente', callback_data='ph_kennedy')
+    item2 = InlineKeyboardButton('Polucion kennedy', callback_data='polucion_kennedy')
     item3 = InlineKeyboardButton('Humedad',callback_data='humedad_kennedy')
     item4 = InlineKeyboardButton('Nivel de Ruido',callback_data='NivelRuido_kennedy')
     markup.add(item1, item2,item3,item4)
     return markup
+
+
+@bot.callback_query_handler(func=lambda message:message.data == 'polucion_campamento')
+def handler_Pollc(call):
+     polucionC = PolucionCampamento(device_keyC,token)
+     if polucionC is not None:
+      bot.send_message = (call.message.chat.id,f"El nivel de polucion de Campamento {polucionC} ppm")
+      bot.send_message(call.message.chat.id, "¿Qué deseas hacer?", reply_markup=generar_teclado_opciones())
+     else:
+        bot.send_message(call.message.chat.id, "No se pudo obtener el nivel de polucion  de campamento en este momento. Inténtalo de nuevo más tarde.")
+        bot.send_message(call.message.chat.id, "¿Qué deseas hacer?", reply_markup=generar_teclado_opciones())
+
+
+
 
 @bot.callback_query_handler(func=lambda message:message.data == 'NivelRuido_kennedy')
 def handler_NoiseK(call):
@@ -303,7 +334,7 @@ def handle_menu(call):
 def QuedeseassaberC():
     markup = InlineKeyboardMarkup(row_width=1)
     item1 = InlineKeyboardButton('Temperatura', callback_data='temp_campamento')
-    item2 = InlineKeyboardButton('Ph del ambiente', callback_data='ph_campamento')
+    item2 = InlineKeyboardButton('Polucion Campamento', callback_data='polucion_campamento')
     item3 = InlineKeyboardButton('Humedad',callback_data='humedad_campamento')
     item4 = InlineKeyboardButton('Nivel de Ruido',callback_data='NivelRuido_campamejnto')
     markup.add(item1, item2,item4,item3)
