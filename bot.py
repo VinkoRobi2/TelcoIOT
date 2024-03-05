@@ -39,9 +39,16 @@ def get_temperatureCampamento(device_keyC, token,call):
         rounded_Ruido = round(Nlevel_value)
         bot.send_message(call.message.chat.id, f"¡Gracias por compartir tu ubicación! Aquí tienes los datos climáticos para tu área")
         bot.send_message(call.message.chat.id, f"La temperatura en Telco City es: {rounded_temperature}°C")
-        bot.send_message(call.message.chat.id, f"La Humedad en Telco City  es: {rounded_humedad} %")
-        bot.send_message(call.message.chat.id, f"El nivel de polucion en Telco City  es: {rounded_Polucion} ppm")
-        bot.send_message(call.message.chat.id, f"El nivel de ruido en Telco City  es {rounded_Ruido} db")
+        bot.send_message(call.message.chat.id, f"La Humedad en Telco City es: {rounded_humedad} %")
+        bot.send_message(call.message.chat.id, f"El nivel de polucion en Telco City es: {rounded_Polucion} ppm")
+        bot.send_message(call.message.chat.id, f"El nivel de ruido en Telco City es: {rounded_Ruido} db")
+        markup = InlineKeyboardMarkup(row_width=2)
+        item1 = InlineKeyboardButton("Sí, me gustaria saber", callback_data='temperature')
+        item2 = InlineKeyboardButton("No, gracias", callback_data='later')
+        markup.add(item1, item2)
+        bot.send_message(call.message.chat.id, '¿Te gustaría conocer el pronóstico de otro lugar?', reply_markup=markup)
+
+
 
     except requests.exceptions.RequestException as e:
         return f"Error al realizar la solicitud: {str(e)}"
@@ -72,6 +79,11 @@ def get_temperatureKennedy(device_keyK,token,call):
             bot.send_message(call.message.chat.id, f"La Humedad en Kennedy es: {rounded_humedad} %")
             bot.send_message(call.message.chat.id, f"El nivel de polucion en Kennedy es: {rounded_Polucion} ppm")
             bot.send_message(call.message.chat.id, f"El nivel de ruido en Kennedy es {rounded_Ruido} db")
+            markup = InlineKeyboardMarkup(row_width=2)
+            item1 = InlineKeyboardButton("Sí, me gustaria saber", callback_data='temperature')
+            item2 = InlineKeyboardButton("No, gracias", callback_data='later')
+            markup.add(item1, item2)
+            bot.send_message(call.message.chat.id, '¿Te gustaría conocer el pronóstico de otro lugar?', reply_markup=markup)
 
        except requests.exceptions.RequestException as e:
         return f"Error al realizar la solicitud: {str(e)}"
@@ -93,6 +105,14 @@ def on_any_message(message):
         markup.add(item1, item2)
         bot_activado = True
         bot.reply_to(message, '¡Hola! Soy AirScan, tu bot meteorológico personal. Estoy aquí para ofrecerte pronósticos precisos y consejos meteorológicos. ¿Quieres continuar?', reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'temperature')
+def ubicacion_temperatura(call):
+    global bot_activado
+    bot.send_message(call.message.chat.id, '¡Genial! ¿De qué ubicación deseas obtener el pronóstico', reply_markup=generar_teclado_ubicaciones())
+    bot_activado = True
+
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'later')
@@ -153,15 +173,6 @@ def handle_exit(call):
 
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'menu')
-def handle_menu(call):
-    bot.send_message(call.message.chat.id, "Volviendo al menú de opciones...") 
-    bot.send_message(call.message.chat.id, "Selecciona lo que deseas saber en Campamento:", reply_markup=generar_teclado_opciones())
-
-
-
-
-
 @bot.callback_query_handler(func=lambda call: call.data.lower() in ['kennedy', 'campamento'])
 def handle_location(call):
     chat_id = call.message.chat.id
@@ -178,8 +189,6 @@ def iniciar_bot():
 
 if __name__ == "__main__":
     iniciar_bot()
-
-
 
 
 
